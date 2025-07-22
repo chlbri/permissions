@@ -42,6 +42,35 @@ export const types = {
     } satisfies PermissionsType<A>;
   },
 
+  object: <T extends object>(obj?: T) => identity<T>(obj),
+
+  partial: <T extends object>(objt?: T) => {
+    return identity<Partial<T>>(objt);
+  },
+
+  omit: <T extends object, K extends (keyof T)[]>(..._: K) => {
+    return identity<Omit<T, K[number]>>();
+  },
+
+  omit2: <T extends object, K extends (keyof T)[]>(
+    _obj: T,
+    ..._keys: K
+  ) => {
+    return types.omit<T, K>(..._keys);
+  },
+
+  string: identity<string>(),
+
+  number: identity<number>(),
+
+  boolean: identity<boolean>(),
+
+  date: identity<Date>(),
+
+  array: <T>(...items: T[]) => identity<T[]>(items),
+
+  tuple: <T extends readonly any[]>(...items: T) => identity(items),
+
   permissions: <
     P extends Record<string, { dataType: any; actions: string[] }>,
   >(

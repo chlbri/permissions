@@ -1,37 +1,37 @@
 import { createTests } from '@bemedev/vitest-extended';
 import { createRolesWithPermissions, identity, types } from './functions';
 
-type Comment = {
-  id: string;
-  body: string;
-  authorId: string;
-  createdAt: Date;
-};
+const comment = types.object({
+  id: types.string,
+  body: types.string,
+  authorId: types.string,
+  createdAt: types.date,
+});
 
-type Todo = {
-  id: string;
-  title: string;
-  userId: string;
-  completed: boolean;
-  invitedUsers: string[];
-};
+const todo = types.object({
+  id: types.string,
+  title: types.string,
+  userId: types.string,
+  completed: types.boolean,
+  invitedUsers: types.array(types.string),
+});
 
 describe('Permissions Functions', () => {
   const { hasPermissions } = createRolesWithPermissions(
     types.args(
       {
         comments: {
-          dataType: identity<Omit<Comment, 'authorId'>>(),
+          dataType: types.omit2(comment, 'authorId'),
           actions: ['view', 'create', 'update'],
         },
         todos: {
-          dataType: identity<Omit<Todo, 'userId'>>(),
+          dataType: types.omit2(todo, 'userId'),
           actions: ['create', 'view', 'update', 'delete'],
         },
       },
-      {
+      types.partial({
         blockeds: identity<string[]>(),
-      },
+      }),
       'admin',
       'moderator',
       'user',
@@ -66,15 +66,15 @@ describe('Permissions Functions', () => {
     user: {
       comments: {
         view: ({ performer, owner }) =>
-          !performer.blockeds.includes(owner.__id) &&
-          !owner.blockeds.includes(performer.__id),
+          !performer.blockeds?.includes(owner.__id) &&
+          !owner.blockeds?.includes(performer.__id),
         create: true,
         update: ({ performer, owner }) => performer.__id === owner.__id,
       },
       todos: {
         view: ({ performer, owner }) =>
-          !performer.blockeds.includes(owner.__id) &&
-          !owner.blockeds.includes(performer.__id),
+          !performer.blockeds?.includes(owner.__id) &&
+          !owner.blockeds?.includes(performer.__id),
         create: true,
         update: ({ performer, data, owner }) =>
           owner.__id === performer.__id ||
@@ -473,10 +473,10 @@ describe('Permissions Functions', () => {
     });
 
     describe('#02.02 => Moderator Role', () => {
-      describe('#02.02.01 => Comments', () => {
-        describe(
-          'Can view all',
-          success({
+      describe(
+        '#02.02.01 => Comments',
+        success(
+          {
             invite: 'Moderator can view all comments',
             expected: true,
             parameters: [
@@ -496,12 +496,8 @@ describe('Permissions Functions', () => {
                 data: { id: 'comment1' },
               },
             ],
-          }),
-        );
-
-        describe(
-          'Can create',
-          success({
+          },
+          {
             invite: 'Moderator can create comments',
             expected: true,
             parameters: [
@@ -520,13 +516,9 @@ describe('Permissions Functions', () => {
                 action: 'create',
               },
             ],
-          }),
-        );
-
-        describe(
-          'Can update any',
-          success({
-            invite: 'Moderator can update comments',
+          },
+          {
+            invite: 'Moderator can update comments, maybe he is blocked',
             expected: true,
             parameters: [
               {
@@ -538,21 +530,21 @@ describe('Permissions Functions', () => {
                 owner: {
                   __id: 'user1',
                   roles: ['user'],
-                  blockeds: [],
+                  blockeds: ['mod1'],
                 },
                 resource: 'comments',
                 action: 'update',
                 data: { id: 'comment1' },
               },
             ],
-          }),
-        );
-      });
+          },
+        ),
+      );
 
-      describe('#02.02.02 => Todos', () => {
-        describe(
-          'Can view all',
-          success({
+      describe(
+        '#02.02.02 => Todos',
+        success(
+          {
             invite: 'Moderator can view all todos',
             expected: true,
             parameters: [
@@ -569,15 +561,15 @@ describe('Permissions Functions', () => {
                 },
                 resource: 'todos',
                 action: 'view',
-                data: { id: 'todo1', completed: false, invitedUsers: [] },
+                data: {
+                  id: 'todo1',
+                  completed: false,
+                  invitedUsers: [],
+                },
               },
             ],
-          }),
-        );
-
-        describe(
-          'Can create',
-          success({
+          },
+          {
             invite: 'Moderator can create todos',
             expected: true,
             parameters: [
@@ -596,13 +588,9 @@ describe('Permissions Functions', () => {
                 action: 'create',
               },
             ],
-          }),
-        );
-
-        describe(
-          'Can update any',
-          success({
-            invite: 'Moderator can update todos',
+          },
+          {
+            invite: 'Moderator can update todos, maybe he is blocked',
             expected: true,
             parameters: [
               {
@@ -613,20 +601,20 @@ describe('Permissions Functions', () => {
                 },
                 owner: {
                   __id: 'user1',
-                  roles: ['user'],
+                  roles: ['mod1'],
                   blockeds: [],
                 },
                 resource: 'todos',
                 action: 'update',
-                data: { id: 'todo1', completed: false, invitedUsers: [] },
+                data: {
+                  id: 'todo1',
+                  completed: false,
+                  invitedUsers: [],
+                },
               },
             ],
-          }),
-        );
-
-        describe(
-          'Can delete completed only',
-          success({
+          },
+          {
             invite: 'Moderator can delete completed todos',
             expected: true,
             parameters: [
@@ -646,12 +634,8 @@ describe('Permissions Functions', () => {
                 data: { id: 'todo1', completed: true, invitedUsers: [] },
               },
             ],
-          }),
-        );
-
-        describe(
-          'Cannot delete incomplete',
-          success({
+          },
+          {
             invite: 'Moderator cannot delete incomplete todos',
             expected: false,
             parameters: [
@@ -668,19 +652,23 @@ describe('Permissions Functions', () => {
                 },
                 resource: 'todos',
                 action: 'delete',
-                data: { id: 'todo1', completed: false, invitedUsers: [] },
+                data: {
+                  id: 'todo1',
+                  completed: false,
+                  invitedUsers: [],
+                },
               },
             ],
-          }),
-        );
-      });
+          },
+        ),
+      );
     });
 
     describe('#02.03 => Admin Role', () => {
-      describe('#02.03.01 => Comments', () => {
-        describe(
-          'Can view all',
-          success({
+      describe(
+        '#02.03.01 => Comments',
+        success(
+          {
             invite: 'Admin can view all comments',
             expected: true,
             parameters: [
@@ -700,12 +688,8 @@ describe('Permissions Functions', () => {
                 data: { id: 'comment1' },
               },
             ],
-          }),
-        );
-
-        describe(
-          'Can create',
-          success({
+          },
+          {
             invite: 'Admin can create comments',
             expected: true,
             parameters: [
@@ -724,13 +708,9 @@ describe('Permissions Functions', () => {
                 action: 'create',
               },
             ],
-          }),
-        );
-
-        describe(
-          'Can update any',
-          success({
-            invite: 'Admin can update any comments',
+          },
+          {
+            invite: 'Admin can update any comments even bloacked',
             expected: true,
             parameters: [
               {
@@ -742,21 +722,21 @@ describe('Permissions Functions', () => {
                 owner: {
                   __id: 'user1',
                   roles: ['user'],
-                  blockeds: [],
+                  blockeds: ['admin1'],
                 },
                 resource: 'comments',
                 action: 'update',
                 data: { id: 'comment1' },
               },
             ],
-          }),
-        );
-      });
+          },
+        ),
+      );
 
-      describe('#02.03.02 => Todos', () => {
-        describe(
-          'Can view all',
-          success({
+      describe(
+        '#02.03.02 => Todos',
+        success(
+          {
             invite: 'Admin can view all todos',
             expected: true,
             parameters: [
@@ -773,15 +753,15 @@ describe('Permissions Functions', () => {
                 },
                 resource: 'todos',
                 action: 'view',
-                data: { id: 'todo1', completed: false, invitedUsers: [] },
+                data: {
+                  id: 'todo1',
+                  completed: false,
+                  invitedUsers: [],
+                },
               },
             ],
-          }),
-        );
-
-        describe(
-          'Can create',
-          success({
+          },
+          {
             invite: 'Admin can create todos',
             expected: true,
             parameters: [
@@ -800,12 +780,8 @@ describe('Permissions Functions', () => {
                 action: 'create',
               },
             ],
-          }),
-        );
-
-        describe(
-          'Can update any',
-          success({
+          },
+          {
             invite: 'Admin can update any todos',
             expected: true,
             parameters: [
@@ -822,15 +798,15 @@ describe('Permissions Functions', () => {
                 },
                 resource: 'todos',
                 action: 'update',
-                data: { id: 'todo1', completed: false, invitedUsers: [] },
+                data: {
+                  id: 'todo1',
+                  completed: false,
+                  invitedUsers: [],
+                },
               },
             ],
-          }),
-        );
-
-        describe(
-          'Can delete any regardless of completion',
-          success({
+          },
+          {
             invite: 'Admin can delete any todos regardless of completion',
             expected: true,
             parameters: [
@@ -847,18 +823,22 @@ describe('Permissions Functions', () => {
                 },
                 resource: 'todos',
                 action: 'delete',
-                data: { id: 'todo1', completed: false, invitedUsers: [] },
+                data: {
+                  id: 'todo1',
+                  completed: false,
+                  invitedUsers: [],
+                },
               },
             ],
-          }),
-        );
-      });
+          },
+        ),
+      );
     });
 
-    describe('#02.04 => Multi-Role Users', () => {
-      describe(
-        'Admin role override',
-        success({
+    describe(
+      '#02.04 => Multi-Role Users',
+      success(
+        {
           invite: 'User with admin role gets full permissions',
           expected: true,
           parameters: [
@@ -878,37 +858,8 @@ describe('Permissions Functions', () => {
               data: { id: 'todo1', completed: false, invitedUsers: [] },
             },
           ],
-        }),
-      );
-
-      describe(
-        'Moderator role can delete completed only',
-        success({
-          invite: 'User with moderator role can delete completed todos',
-          expected: true,
-          parameters: [
-            {
-              performer: {
-                __id: 'user1',
-                roles: ['user', 'moderator'],
-                blockeds: [],
-              },
-              owner: {
-                __id: 'user2',
-                roles: ['user'],
-                blockeds: [],
-              },
-              resource: 'todos',
-              action: 'delete',
-              data: { id: 'todo1', completed: true, invitedUsers: [] },
-            },
-          ],
-        }),
-      );
-
-      describe(
-        'Moderator role cannot delete incomplete',
-        success({
+        },
+        {
           invite:
             'User with moderator role cannot delete incomplete todos',
           expected: false,
@@ -929,14 +880,14 @@ describe('Permissions Functions', () => {
               data: { id: 'todo1', completed: false, invitedUsers: [] },
             },
           ],
-        }),
-      );
-    });
+        },
+      ),
+    );
   });
 });
 
 describe('types.permission', () => {
-  it('returns correct dataType and first action', () => {
+  it('#01 => returns correct dataType and first action', () => {
     const result = types.permission({ foo: 'bar' }, 'read', 'write');
     expect(result).toEqual({
       dataType: { foo: 'bar' },
@@ -944,7 +895,7 @@ describe('types.permission', () => {
     });
   });
 
-  it('handles empty actions array', () => {
+  it('#02 => handles empty actions array', () => {
     const result = types.permission({ foo: 'bar' });
     expect(result).toEqual({
       dataType: { foo: 'bar' },
@@ -952,7 +903,7 @@ describe('types.permission', () => {
     });
   });
 
-  it('works with primitive dataType', () => {
+  it('#03 =>works with primitive dataType', () => {
     const result = types.permission(42, 'edit');
     expect(result).toEqual({
       dataType: 42,
@@ -960,7 +911,7 @@ describe('types.permission', () => {
     });
   });
 
-  it('works with no dataType provided', () => {
+  it('#04 => works with no dataType provided', () => {
     const result = types.permission(undefined, 'delete');
     expect(result).toEqual({
       dataType: undefined,
