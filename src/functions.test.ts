@@ -1,36 +1,35 @@
+import { decomposeKeys } from '@bemedev/decompose';
+import { transform } from '@bemedev/types';
 import { createTests } from '@bemedev/vitest-extended';
-import { createRolesWithPermissions, identity, types } from './functions';
-
-const comment = types.object({
-  id: types.string,
-  body: types.string,
-  authorId: types.string,
-  createdAt: types.date,
-});
-
-const todo = types.object({
-  id: types.string,
-  title: types.string,
-  userId: types.string,
-  completed: types.boolean,
-  invitedUsers: types.array(types.string),
-});
+import { createRolesWithPermissions, types } from './functions';
 
 describe('Permissions Functions', () => {
-  const { hasPermissions } = createRolesWithPermissions(
+  const { hasPermissions, ROLES } = createRolesWithPermissions(
     types.args(
       {
         comments: {
-          dataType: types.omit2(comment, 'authorId'),
-          actions: ['view', 'create', 'update'],
+          dataType: {
+            id: 'string',
+            body: 'string',
+            authorId: 'string',
+            createdAt: 'date',
+          },
+          actions: ['view', 'create', 'update', 'remove'],
         },
         todos: {
-          dataType: types.omit2(todo, 'userId'),
+          dataType: {
+            id: 'string',
+            title: 'string',
+            userId: 'string',
+            completed: 'boolean',
+            invitedUsers: ['string'],
+            createdAt: 'date',
+          },
           actions: ['create', 'view', 'update', 'delete'],
         },
       },
-      types.partial({
-        blockeds: identity<string[]>(),
+      transform.partial({
+        blockeds: ['string'],
       }),
       'admin',
       'moderator',
@@ -88,6 +87,11 @@ describe('Permissions Functions', () => {
 
   const { acceptation, success } = createTests(hasPermissions);
 
+  test('#00 => Debug', () => {
+    console.log('some stuff');
+    console.log('ROLES', '=>', decomposeKeys.strict(ROLES));
+  });
+
   describe('#01 => Acceptation', acceptation);
 
   describe('#02 => Usage', () => {
@@ -117,25 +121,42 @@ describe('Permissions Functions', () => {
             ],
           },
           {
+            invite: 'User cannot remove comments',
+            expected: false,
+            parameters: {
+              performer: {
+                __id: 'user1',
+                roles: ['user'],
+                blockeds: [],
+              },
+              owner: {
+                __id: 'user2',
+                roles: ['user'],
+                blockeds: [],
+              },
+              resource: 'comments',
+              action: 'remove',
+              data: { id: 'comment1' },
+            },
+          },
+          {
             invite: 'User cannot view comments when blocked by owner',
             expected: false,
-            parameters: [
-              {
-                performer: {
-                  __id: 'user1',
-                  roles: ['user'],
-                  blockeds: [],
-                },
-                owner: {
-                  __id: 'user2',
-                  roles: ['user'],
-                  blockeds: ['user1'],
-                },
-                resource: 'comments',
-                action: 'view',
-                data: { id: 'comment1' },
+            parameters: {
+              performer: {
+                __id: 'user1',
+                roles: ['user'],
+                blockeds: [],
               },
-            ],
+              owner: {
+                __id: 'user2',
+                roles: ['user'],
+                blockeds: ['user1'],
+              },
+              resource: 'comments',
+              action: 'view',
+              data: { id: 'comment1' },
+            },
           },
           {
             invite:
@@ -888,25 +909,25 @@ describe('Permissions Functions', () => {
 
 describe('types.permission', () => {
   it('#01 => returns correct dataType and first action', () => {
-    const result = types.permission({ foo: 'bar' }, 'read', 'write');
+    const result = types.permission({ foo: 'number' }, 'read', 'write');
     expect(result).toEqual({
-      dataType: { foo: 'bar' },
+      dataType: { foo: undefined },
       action: 'read',
     });
   });
 
   it('#02 => handles empty actions array', () => {
-    const result = types.permission({ foo: 'bar' });
+    const result = types.permission({ foo: 'string' });
     expect(result).toEqual({
-      dataType: { foo: 'bar' },
+      dataType: { foo: undefined },
       action: undefined,
     });
   });
 
   it('#03 =>works with primitive dataType', () => {
-    const result = types.permission(42, 'edit');
+    const result = types.permission('number', 'edit');
     expect(result).toEqual({
-      dataType: 42,
+      dataType: undefined,
       action: 'edit',
     });
   });

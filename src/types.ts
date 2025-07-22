@@ -1,3 +1,5 @@
+import { KeysMatching } from '@bemedev/decompose';
+
 export type DeepPartial<T extends object> = {
   [K in keyof T]?: T[K] extends object ? DeepPartial<T[K]> : T[K];
 };
@@ -18,14 +20,15 @@ export type PermissionCheck<
   P extends PermissionsTypes,
   K extends keyof P,
   PD extends P[K]['dataType'] = P[K]['dataType'],
+  Keys = KeysMatching<PD>[],
 > =
   | boolean
-  | PD
+  | Keys
   | ((args: {
       performer: U;
       data: P[K]['dataType'];
       owner: U;
-    }) => boolean | PD);
+    }) => boolean | Keys);
 
 export type RolesWithPermissions<
   R extends Roles,

@@ -7,12 +7,18 @@ settings:
 importers:
   .:
     devDependencies:
+      '@bemedev/decompose':
+        specifier: ^0.9.0
+        version: 0.9.0(@bemedev/types@0.3.1)
       '@bemedev/fsf':
         specifier: ^0.8.0
         version: 0.8.0
       '@bemedev/rollup-config':
         specifier: ^0.1.1
         version: 0.1.1(glob@11.0.3)(rollup@4.45.1)(typescript@5.8.3)
+      '@bemedev/types':
+        specifier: ^0.3.1
+        version: 0.3.1
       '@bemedev/vitest-alias':
         specifier: ^0.0.3
         version: 0.0.3(vitest@3.2.4(@types/node@24.1.0)(jiti@2.4.2))
@@ -124,6 +130,15 @@ packages:
       }
     engines: { node: '>=18' }
 
+  '@bemedev/decompose@0.9.0':
+    resolution:
+      {
+        integrity: sha512-LFCK6cuoyXmyWdd8kUtQwy5CTAUwVCowdUMnto4hpWBtDQO9Kq1QDqMEMOuZNxkTgNxHWt5Lacqvn8MRekqgsw==,
+      }
+    engines: { node: '>=20' }
+    peerDependencies:
+      '@bemedev/types': ^0.1.8
+
   '@bemedev/fsf@0.8.0':
     resolution:
       {
@@ -151,6 +166,13 @@ packages:
     resolution:
       {
         integrity: sha512-deiw1HTCJzF9vEsRI6AhGwi/7RafYjufPCjoY4qReoy60bduHaheEzVv853P8iJIbRiRpMBUXro9chweI/XrGA==,
+      }
+    engines: { node: '>=22' }
+
+  '@bemedev/types@0.3.1':
+    resolution:
+      {
+        integrity: sha512-kfmHwkRzaMAqEUpzYutPxcwaXWAbZEKQ9LlNkRSv4ABvDuxSndc3gKg8PCeoEP49DviB9uU5KK11vEfUAB7Spg==,
       }
     engines: { node: '>=22' }
 
@@ -2386,6 +2408,13 @@ packages:
     peerDependencies:
       typescript: '>=4.8.4'
 
+  ts-deepmerge@7.0.3:
+    resolution:
+      {
+        integrity: sha512-Du/ZW2RfwV/D4cmA5rXafYjBQVuvu4qGiEEla4EmEHVHgRdx68Gftx7i66jn2bzHPwSVZY36Ae6OuDn9el4ZKA==,
+      }
+    engines: { node: '>=14.13.1' }
+
   tsc-alias@1.8.16:
     resolution:
       {
@@ -2589,6 +2618,11 @@ snapshots:
 
   '@bcoe/v8-coverage@1.0.2': {}
 
+  '@bemedev/decompose@0.9.0(@bemedev/types@0.3.1)':
+    dependencies:
+      '@bemedev/types': 0.3.1
+      ts-deepmerge: 7.0.3
+
   '@bemedev/fsf@0.8.0':
     dependencies:
       '@bemedev/x-guard': 0.2.0
@@ -2609,6 +2643,8 @@ snapshots:
   '@bemedev/sleep@0.1.2': {}
 
   '@bemedev/types@0.1.9': {}
+
+  '@bemedev/types@0.3.1': {}
 
   '@bemedev/vitest-alias@0.0.3(vitest@3.2.4(@types/node@24.1.0)(jiti@2.4.2))':
     dependencies:
@@ -3850,6 +3886,8 @@ snapshots:
   ts-api-utils@2.1.0(typescript@5.8.3):
     dependencies:
       typescript: 5.8.3
+
+  ts-deepmerge@7.0.3: {}
 
   tsc-alias@1.8.16:
     dependencies:
