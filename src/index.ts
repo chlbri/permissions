@@ -1,3 +1,2 @@
-export default function todo() {
-  return 'todo';
-}
+export * from './functions';
+export * from './types';
