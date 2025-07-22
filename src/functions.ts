@@ -1,5 +1,12 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
+import { transform } from '@bemedev/types';
+import type {
+  MapS,
+  ObjectS,
+  PartialCustom,
+  TransformO,
+} from '@bemedev/types/lib/transform/types.types';
 import type {
   PermissionsType,
   PermissionsTypes,
@@ -11,10 +18,10 @@ import type {
 type AnyArray<T> = T[] | readonly T[];
 
 type TransformPermissions<
-  P extends Record<string, { dataType: any; actions: string[] }>,
+  P extends Record<string, { dataType: ObjectS; actions: string[] }>,
 > = {
   [K in keyof P]: {
-    dataType: P[K]['dataType'];
+    dataType: TransformO<P[K]['dataType']>;
     action: P[K]['actions'][number];
   };
 };
@@ -24,34 +31,43 @@ export const identity = <const T>(value?: T) => value as T;
 export const types = {
   roles: <const R extends AnyArray<Roles>>(...roles: R) => identity(roles),
 
-  user: <const R extends AnyArray<Roles>, Rest = any>(
+  user: <
+    const R extends AnyArray<Roles>,
+    const Rest extends MapS | PartialCustom = MapS | PartialCustom,
+  >(
     __?: Rest,
     ..._: R
-  ) => identity<Omit<Rest, '__id' | 'roles'> & User<R[number]>>(),
+  ) => {
+    const rest = transform(__);
+    return identity<
+      Readonly<Omit<typeof rest, '__id' | 'roles'> & User<R[number]>>
+    >();
+  },
 
-  permission: <const S extends string[], const A = any>(
+  permission: <
+    const S extends string[],
+    const A extends ObjectS = ObjectS,
+  >(
     dataType?: A,
     ...actions: S
   ) => {
-    return {
-      dataType,
+    return identity<PermissionsType<TransformO<A>>>({
+      dataType: identity<TransformO<A>>((transform as any)(dataType)),
       action: actions[0],
-    } as {
-      action: S[number];
-      dataType: A;
-    } satisfies PermissionsType<A>;
+    });
   },
 
   permissions: <
-    P extends Record<string, { dataType: any; actions: string[] }>,
+    P extends Record<string, { dataType: ObjectS; actions: string[] }>,
   >(
     permissions: P,
   ) => {
     const entries = Object.entries(permissions);
 
     return entries
-      .map(([key, { actions, dataType }]) => {
+      .map(([key, { actions, dataType: dt }]) => {
         const action = actions[0];
+        const dataType = transform(dt);
         return [key, { dataType, action }] as const;
       })
       .reduce(
@@ -62,8 +78,11 @@ export const types = {
 
   rolesWithPermissions: <
     const R extends AnyArray<Roles>,
-    P extends Record<string, { dataType: any; actions: string[] }>,
-    Rest = any,
+    const P extends Record<
+      string,
+      { dataType: ObjectS; actions: string[] }
+    >,
+    const Rest extends MapS | PartialCustom = MapS | PartialCustom,
   >(
     _permissions: P,
     _restUser?: Rest,
@@ -82,8 +101,11 @@ export const types = {
 
   args: <
     const R extends AnyArray<Roles>,
-    P extends Record<string, { dataType: any; actions: string[] }>,
-    Rest = any,
+    const P extends Record<
+      string,
+      { dataType: ObjectS; actions: string[] }
+    >,
+    const Rest extends MapS | PartialCustom = MapS | PartialCustom,
   >(
     _permissions: P,
     _restUser?: Rest,
@@ -102,9 +124,9 @@ type CreateRolesWithPermissionsArgs<
 };
 
 export const createRolesWithPermissions = <
-  R extends Roles[],
-  U extends User<R[number]>,
-  P extends PermissionsTypes,
+  const R extends Roles[],
+  const U extends User<R[number]>,
+  const P extends PermissionsTypes,
 >(
   _?: CreateRolesWithPermissionsArgs<R, U, P>,
 ) => {
@@ -118,7 +140,7 @@ export const createRolesWithPermissions = <
       owner: U;
       resource: Re;
       action: P[Re]['action'];
-      data?: P[Re]['dataType'];
+      data?: Partial<P[Re]['dataType']>;
     };
 
     const hasPermissions = <Re extends Extract<keyof P, string>>({
@@ -133,14 +155,18 @@ export const createRolesWithPermissions = <
 
         if (typeof permission === 'function') {
           return (
-            data != null &&
-            permission({
-              performer,
-              data,
-              owner,
-            })
+            !!data &&
+            permission(
+              Object.freeze({
+                performer,
+                data,
+                owner,
+              }),
+            )
           );
         }
+
+        if (!permission) return false;
 
         return permission;
       });
