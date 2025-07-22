@@ -31,7 +31,11 @@
     }
   ],
   "keywords": [
-    "abac"
+    "abac",
+    "permissions",
+    "bemedev",
+    "typescript",
+    "typed"
   ],
   "files": [
     "lib",
