@@ -934,3 +934,37 @@ describe('Permissions Functions', () => {
     });
   });
 });
+
+describe('types.permission', () => {
+  it('returns correct dataType and first action', () => {
+    const result = types.permission({ foo: 'bar' }, 'read', 'write');
+    expect(result).toEqual({
+      dataType: { foo: 'bar' },
+      action: 'read',
+    });
+  });
+
+  it('handles empty actions array', () => {
+    const result = types.permission({ foo: 'bar' });
+    expect(result).toEqual({
+      dataType: { foo: 'bar' },
+      action: undefined,
+    });
+  });
+
+  it('works with primitive dataType', () => {
+    const result = types.permission(42, 'edit');
+    expect(result).toEqual({
+      dataType: 42,
+      action: 'edit',
+    });
+  });
+
+  it('works with no dataType provided', () => {
+    const result = types.permission(undefined, 'delete');
+    expect(result).toEqual({
+      dataType: undefined,
+      action: 'delete',
+    });
+  });
+});

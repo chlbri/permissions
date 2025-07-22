@@ -131,8 +131,6 @@ export const createRolesWithPermissions = <
       return performer.roles.some(role => {
         const permission = ROLES[role][resource]?.[action];
 
-        if (permission === undefined) return false;
-
         if (typeof permission === 'function') {
           return (
             data != null &&
