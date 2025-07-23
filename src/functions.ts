@@ -163,6 +163,8 @@ export const createRolesWithPermissions = <
                 owner,
               }),
             )
+            // &&
+            // TODO: Add extra permissions on all ressources, User is also a ressource
           );
         }
 
