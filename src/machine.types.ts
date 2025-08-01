@@ -4,7 +4,7 @@ import type {
   CheckReturnType,
   Config,
   ExtraPermissionsKey,
-  RessourcesFrom,
+  UserFrom,
 } from './types';
 
 export type CollectedReturns<Keys extends string> = boolean | Keys[];
@@ -14,12 +14,12 @@ export type ReduceCollectedReturns_F = <Keys extends string>(
 ) => CollectedReturns<Keys>;
 
 export type ResPerm<
-  C extends Config,
-  Re extends string,
+  Co extends Config,
+  Re extends keyof Co['ressources'],
   Keys extends string,
 > = Partial<
   Record<
-    types.ReduceArray<types.ValuesOf<C>[Re]>,
+    types.ReduceArray<Co['ressources'][Re]['actions']>,
     Partial<
       Record<
         'allow' | 'disallow',
@@ -27,7 +27,7 @@ export type ResPerm<
           Record<
             Keys | '**',
             // IDS of users allowed or disallowed to perform the action
-            ExtraPermissionsKey<Extract<keyof C, string>>[]
+            ExtraPermissionsKey<Extract<keyof Co, string>>[]
           >
         >
       >
@@ -36,62 +36,65 @@ export type ResPerm<
 >;
 
 export type ResPerm2<
-  C extends Config,
-  Re extends string,
+  Co extends Config,
+  Re extends keyof Co['ressources'],
   Keys extends string[],
 > =
   | true
   | Partial<
       Record<
-        ExtraPermissionsKey<Extract<keyof C, string>>,
-        Record<types.ReduceArray<types.ValuesOf<C>[Re]>, boolean | Keys>
+        ExtraPermissionsKey<Extract<keyof Co, string>>,
+        Record<
+          types.ReduceArray<Co['ressources'][Re]['actions']>,
+          boolean | Keys
+        >
       >
     >;
 
 export type HasUserPermissions_F<
-  C extends Config,
-  P extends RessourcesFrom<C>,
-  _User extends object,
+  Co extends Config,
+  Res extends Co['ressources'] = Co['ressources'],
+  User extends UserFrom<Co> & Co['user'] = UserFrom<Co> & Co['user'],
 > = <
-  Re extends Extract<keyof P, string>,
-  A extends types.ReduceArray<types.ValuesOf<C>[Re]>,
-  PD extends types.DeepPartial<P[Re]['dataType']>,
+  Re extends Extract<keyof Res, string>,
+  A extends types.ReduceArray<Res[Re]['actions']>,
+  PD extends types.DeepPartial<Res[Re]['dataType']>,
 >(args: {
-  performer: _User;
-  owner: _User;
+  performer: User;
+  owner: User;
   ressource: Re;
   action: A;
   data?: PD;
 }) => CheckReturnType<PD>;
 
 export type HasDataPermissions_F<
-  C extends Config,
-  P extends RessourcesFrom<C>,
-  _User extends object,
+  Co extends Config,
+  Res extends Co['ressources'] = Co['ressources'],
+  User extends UserFrom<Co> & Co['user'] = UserFrom<Co> & Co['user'],
 > = <
-  Re extends Extract<keyof P, string>,
-  A extends types.ReduceArray<types.ValuesOf<C>[Re]>,
-  PD extends types.TrueObject = types.DeepPartial<P[Re]['dataType']>,
+  Re extends Extract<keyof Res, string>,
+  A extends types.ReduceArray<Res[Re]['actions']>,
+  PD extends types.TrueObject = types.DeepPartial<Res[Re]['dataType']>,
   Keys extends string = KeysMatching<PD>,
 >(
-  performer: _User,
+  performer: User,
   action: A,
-  extraPermisions?: ResPerm<C, Re, Keys>,
+  extraPermisions?: ResPerm<Co, Re, Keys>,
 ) => CheckReturnType<PD>;
 
 export type HasPermissions_F<
-  C extends Config,
-  P extends RessourcesFrom<C>,
-  _User extends object,
+  Co extends Config,
+  Res extends Co['ressources'] = Co['ressources'],
+  User extends UserFrom<Co> & Co['user'] = UserFrom<Co> & Co['user'],
 > = <
-  Re extends Extract<keyof P, string>,
-  A extends types.ReduceArray<types.ValuesOf<C>[Re]>,
-  PD extends types.DeepPartial<P[Re]['dataType']>,
+  Re extends Extract<keyof Res, string>,
+  A extends types.ReduceArray<Res[Re]['actions']>,
+  PD extends types.DeepPartial<Res[Re]['dataType']>,
   Keys extends string = KeysMatching<PD>,
 >(args: {
-  performer: _User;
-  owner: _User;
+  performer: User;
+  owner: User;
   ressource: Re;
   action: A;
-  data?: PD & { __extraPermissions?: ResPerm<C, Re, Keys> };
+  data?: PD & { __extraPermissions?: ResPerm<Co, Re, Keys> };
 }) => CheckReturnType<PD>;
