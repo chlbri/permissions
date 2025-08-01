@@ -24,8 +24,11 @@ class Machine<
   const Us extends object,
   const Ro extends RolesFrom<Co>,
   const Res extends RessourcesFrom<Co>,
-  User extends UserFrom<Co> = UserFrom<Co> & Us,
-  Implementation extends Impl<Co, User, Res> = Impl<Co, User, Res>,
+  Implementation extends Impl<Co, UserFrom<Co> & Us, Res> = Impl<
+    Co,
+    UserFrom<Co> & Us,
+    Res
+  >,
 > {
   #ressources!: Res;
 
@@ -48,11 +51,11 @@ class Machine<
   }
 
   get __user() {
-    return typings.commons.unknown<User>();
+    return typings.commons.unknown<UserFrom<Co> & Us>();
   }
 
-  get __ressources() {
-    return typings.commons.unknown<Res>();
+  get ressources() {
+    return this.#ressources;
   }
 
   getPriority(role: keyof Ro) {
@@ -81,8 +84,12 @@ class Machine<
 
   /**
    * @deprecated
-   * @param ressouces
-   * @returns
+   *
+   * Provides resources to the machine.
+   * This method is used to set the resources for the machine, allowing it to manage permissions
+   * based on the provided resources.
+   * @param ressouces The resources to be set for the machine.
+   * @returns A new instance of the machine with the provided resources.
    */
   __provideRessources = <const P extends RessourcesFrom<Co>>(
     ressouces: P,
@@ -97,15 +104,33 @@ class Machine<
 
   #addRoles = <const R extends Ro>(roles: R) => (this.#roles = roles);
 
+  /**
+   * @deprecated
+   *
+   * Provides roles to the machine.
+   * This method is used to set the roles for the machine, allowing it to manage permissions
+   * based on the provided roles.
+   * @param roles  The roles to be set for the machine.
+   * @returns A new instance of the machine with the provided roles.
+   */
   __provideRoles = <const R extends RolesFrom<Co>>(roles: R) => {
     const _new = new Machine<Co, Us, R, Res>(this.__config);
 
-    _new.#addRoles(roles);
     _new.#ressources = this.#ressources;
+    _new.#addRoles(roles);
 
     return _new;
   };
 
+  /**
+   * @deprecated
+   *
+   * Provides user data to the machine.
+   * This method is used to set the user data for the machine, allowing it to manage permissions
+   * based on the provided user data.
+   * @param user  The user data to be set for the machine.
+   * @returns A new instance of the machine with the provided user data.
+   */
   __provideUser = <const U extends object>(_?: U) => {
     const _new = new Machine<Co, U, Ro, Res>(this.__config);
 
@@ -119,8 +144,17 @@ class Machine<
     return (this.#implementation = implementation);
   };
 
-  implements = (implementation: Implementation) => {
-    const _new = new Machine<Co, Us, Ro, Res, User, Implementation>(
+  /**
+   * @deprecated
+   *
+   * Implements the machine with the provided implementation.
+   * This method is used to set the implementation for the machine, allowing it to handle permissions
+   * based on the provided implementation logic.
+   * @param implementation The implementation logic to be set for the machine.
+   * @returns A new instance of the machine with the provided implementation.
+   */
+  __implements = (implementation: Implementation) => {
+    const _new = new Machine<Co, Us, Ro, Res, Implementation>(
       this.__config,
     );
 
@@ -131,51 +165,46 @@ class Machine<
     return _new;
   };
 
-  #hasUserPermissions: HasUserPermissions_F<Co, Res, User> = ({
-    performer,
-    owner,
-    data,
-    action,
-    resource,
-  }) => {
-    const sortedRoles = this.#reverseRoles(performer.roles);
+  #hasUserPermissions: HasUserPermissions_F<Co, Res, UserFrom<Co> & Us> =
+    ({ performer, owner, data, action, ressource: resource }) => {
+      const sortedRoles = this.#reverseRoles(performer.roles);
 
-    const collecteds: CollectedReturns<any>[] = [];
+      const collecteds: CollectedReturns<any>[] = [];
 
-    sortedRoles.forEach(role => {
-      const key =
-        `${String(role) as keyof Co & string}${DELIMITER}${resource}${DELIMITER}${action}` as keyof Implementation;
+      sortedRoles.forEach(role => {
+        const key =
+          `${String(role) as keyof Co & string}${DELIMITER}${resource}${DELIMITER}${action}` as keyof Implementation;
 
-      const permission = this.#implementation[key];
+        const permission = this.#implementation[key];
 
-      if (castings.commons.isUndefined(permission)) return;
+        if (castings.commons.isUndefined(permission)) return;
 
-      if (typeof permission === 'function') {
-        const result = castings.commons.any(
-          permission({
-            owner,
-            performer,
-            data,
-          }),
-        );
+        if (typeof permission === 'function') {
+          const result = castings.commons.any(
+            permission({
+              owner,
+              performer,
+              data,
+            }),
+          );
 
-        collecteds.push(result);
+          collecteds.push(result);
 
-        return;
-      }
+          return;
+        }
 
-      collecteds.push(permission);
-    });
+        collecteds.push(permission);
+      });
 
-    return Machine.reduceCollection(...collecteds);
-  };
+      return Machine.reduceCollection(...collecteds);
+    };
 
-  #hasDataPermissions: HasDataPermissions_F<Co, Res, User> = (
+  #hasDataPermissions: HasDataPermissions_F<Co, Res, UserFrom<Co> & Us> = (
     performer,
     action,
     extra,
   ) => {
-    const permissions = this.extractDataPermissions(extra);
+    const permissions = this.#extractDataPermissions(extra);
 
     const sortedRoles = this.#reverseRoles(performer.roles);
 
@@ -202,7 +231,7 @@ class Machine<
     return Machine.reduceCollection(...collecteds);
   };
 
-  hasPermisions: HasPermissions_F<Co, Res, User> = args => {
+  hasPermisions: HasPermissions_F<Co, Res, UserFrom<Co> & Us> = args => {
     const userPermissions = this.#hasUserPermissions(args);
 
     const getData = () =>
@@ -212,7 +241,9 @@ class Machine<
         args.data?.__extraPermissions,
       );
 
-    const strategy = this.#ressources[args.resource].__strategy;
+    console.log('ressource', this.#ressources[args.ressource]);
+
+    const strategy = this.#ressources[args.ressource].__strategy;
 
     switch (strategy) {
       case 'bypass':
@@ -237,7 +268,7 @@ class Machine<
     }
   };
 
-  extractDataPermissions = <
+  #extractDataPermissions = <
     Re extends Extract<keyof Res, string>,
     PD extends types.TrueObject = types.DeepPartial<Res[Re]['dataType']>,
     Keys extends string = KeysMatching<PD>,
@@ -347,5 +378,28 @@ class Machine<
     return out;
   };
 }
+
+export const createMachine = <
+  const Co extends Config,
+  const Us extends object,
+  const Ro extends RolesFrom<Co>,
+  const Res extends RessourcesFrom<Co>,
+>(
+  config: Co,
+  options: {
+    ressources: Res;
+    roles: Ro;
+    user?: Us;
+  },
+  implementation: Impl<Co, UserFrom<Co> & Us, Res>,
+) => {
+  const machine = new Machine(config)
+    .__provideUser(options.user)
+    .__provideRessources(options.ressources)
+    .__provideRoles(options.roles)
+    .__implements(implementation);
+
+  return machine;
+};
 
 export { type Machine };

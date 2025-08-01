@@ -1,13 +1,12 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
-import { transform, types } from '@bemedev/types';
+import { castings, transform, types } from '@bemedev/types';
 import type {
   MapS,
   ObjectS,
   PartialCustom,
   TransformO,
 } from '@bemedev/types/lib/transform/types.types';
-import { identity } from './helpers';
 import type {
   Ressource,
   Roles,
@@ -16,8 +15,7 @@ import type {
 } from './types';
 
 export const typings = {
-  roles: <const R extends types.AnyArray<Roles>>(...roles: R) =>
-    identity(roles),
+  roles: <const R extends types.AnyArray<Roles>>(...roles: R) => roles,
 
   user: <
     const R extends types.AnyArray<Roles>,
@@ -27,9 +25,9 @@ export const typings = {
     ..._: R
   ) => {
     const rest = transform(__);
-    return identity<
+    return castings.commons.unknown<
       Readonly<Omit<typeof rest, '__id' | 'roles'> & User<R[number]>>
-    >();
+    >(3);
   },
 
   permission: <
@@ -39,8 +37,10 @@ export const typings = {
     dataType?: A,
     ...actions: S
   ) => {
-    return identity<Ressource<TransformO<A>>>({
-      dataType: identity<TransformO<A>>((transform as any)(dataType)),
+    return castings.commons.unknown<Ressource<TransformO<A>>>({
+      dataType: castings.commons.unknown<TransformO<A>>(
+        (transform as any)(dataType),
+      ),
       action: actions[0],
     });
   },

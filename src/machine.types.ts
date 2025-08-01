@@ -59,7 +59,7 @@ export type HasUserPermissions_F<
 >(args: {
   performer: _User;
   owner: _User;
-  resource: Re;
+  ressource: Re;
   action: A;
   data?: PD;
 }) => CheckReturnType<PD>;
@@ -91,7 +91,7 @@ export type HasPermissions_F<
 >(args: {
   performer: _User;
   owner: _User;
-  resource: Re;
+  ressource: Re;
   action: A;
   data?: PD & { __extraPermissions?: ResPerm<C, Re, Keys> };
 }) => CheckReturnType<PD>;
