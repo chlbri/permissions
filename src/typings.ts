@@ -11,14 +11,16 @@ import type { Config, Roles, Strategy } from './types';
 
 type RessourcesS = Record<
   string,
-  { dataType: ObjectS; actions: string[]; __strategy: Strategy }
+  { dataType: ObjectS; actions: string[]; __strategy?: Strategy }
 >;
 
 type TransformRessources<T extends RessourcesS> = {
   [K in keyof T]: {
     dataType: TransformO<T[K]['dataType']>;
     actions: T[K]['actions'];
-    __strategy: T[K]['__strategy'];
+    __strategy?: unknown extends T[K]['__strategy']
+      ? undefined
+      : T[K]['__strategy'];
   };
 };
 

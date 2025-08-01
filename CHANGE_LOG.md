@@ -3,13 +3,26 @@
 <br/>
 <br/>
 
-### Version [0.0.1] --> _date & hour_
+<details>
+<summary>
+<h3> Version [0.1.0] --> 2025/08/01 14:30 </h3>
+</summary>
 
-- ✨ Première version de la bibliothèque
+- ✨ Permissions machine with ABAC (Attribute-Based Access Control) system
+- 🔧 Support for strategies: bypass, and, or
+- 📝 Complete TypeScript types for type safety
+- 🎯 `createMachine` factory to create permission instances
+- 🔒 Role system with priorities
+- 📊 Resource management with actions and data types
+- 🧪 Complete tests with vitest-extended
+- 📚 Helpers for permission extraction
+- 🛡️ Validation of user and data permissions
+
+</details>
 
 <br/>
 
-## Auteur
+## Author
 
 chlbri (bri_lvi@icloud.com)
 
@@ -19,6 +32,6 @@ chlbri (bri_lvi@icloud.com)
 
 <br/>
 
-## Liens
+## Links
 
-- [Documentation](https://github.com/chlbri/new-package)
+- [Documentation](https://github.com/chlbri/permissions)

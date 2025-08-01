@@ -51,21 +51,21 @@ class Machine<
     return this.#roles[role];
   }
 
-  #sortRoles = (roles: (keyof Co['roles'])[]) => {
+  #sortRoles = (...roles: (keyof Co['roles'])[]) => {
     return roles.sort((a, b) => {
       return this.getPriority(a) - this.getPriority(b);
     });
   };
 
-  #reverseRoles = (roles: (keyof Co['roles'])[]) => {
+  #reverseRoles = (...roles: (keyof Co['roles'])[]) => {
     return roles.sort((a, b) => {
       return this.getPriority(b) - this.getPriority(a);
     });
   };
 
   sortRoles = (order: 'asc' | 'desc', ...roles: (keyof Co['roles'])[]) => {
-    if (order === 'asc') return this.#sortRoles(roles);
-    return this.#reverseRoles(roles);
+    if (order === 'asc') return this.#sortRoles(...roles);
+    return this.#reverseRoles(...roles);
   };
 
   #implements = (implementation: Implementation) => {
@@ -96,7 +96,7 @@ class Machine<
     action,
     ressource,
   }) => {
-    const sortedRoles = this.#reverseRoles(performer.roles);
+    const sortedRoles = this.#reverseRoles(...performer.roles);
 
     const collecteds: CollectedReturns<any>[] = [];
 
@@ -109,25 +109,21 @@ class Machine<
       if (castings.commons.isUndefined(permission)) return;
 
       if (typeof permission === 'function') {
-        const result = castings.commons.any(
-          permission({
-            owner,
-            performer,
-            data,
-          }),
-        );
+        const result = permission({
+          owner,
+          performer,
+          data,
+        });
 
-        collecteds.push(result);
-
-        return;
+        return collecteds.push(result);
       }
 
-      collecteds.push(permission);
+      return collecteds.push(permission);
     });
 
     if (collecteds.length === 0) return false;
 
-    return Machine.reduceCollection(...collecteds);
+    return Machine.reduceCollection('or', ...collecteds);
   };
 
   #hasDataPermissions: HasDataPermissions_F<Co> = (
@@ -137,7 +133,7 @@ class Machine<
   ) => {
     const permissions = this.#extractDataPermissions(extra);
 
-    const sortedRoles = this.#reverseRoles(performer.roles);
+    const sortedRoles = this.#reverseRoles(...performer.roles);
 
     if (permissions === true) return true;
 
@@ -148,48 +144,35 @@ class Machine<
 
     const collecteds: CollectedReturns<any>[] = [];
 
-    if (result1) collecteds.push(result1);
+    if (castings.commons.isDefined(result1)) collecteds.push(result1);
 
     sortedRoles.forEach(role => {
       const _role = String(role) as keyof Co & string;
       const value1 = permissions[`role:${_role}`]?.[action];
-
       if (value1) collecteds.push(value1);
     });
 
     if (collecteds.length === 0) return true;
 
-    return Machine.reduceCollection(...collecteds);
+    return Machine.reduceCollection('or', ...collecteds);
   };
 
   hasPermisions: HasPermissions_F<Co> = args => {
     const userPermissions = this.#hasUserPermissions(args);
+    const dataPermissions = this.#hasDataPermissions(
+      args.performer,
+      args.action,
+      args.data?.__extraPermissions,
+    );
 
-    const getData = () =>
-      this.#hasDataPermissions(
-        args.performer,
-        args.action,
-        args.data?.__extraPermissions,
-      );
+    const strategy =
+      this.#ressources[args.ressource].__strategy || 'bypass';
 
-    const strategy = this.#ressources[args.ressource].__strategy;
-
-    switch (strategy) {
-      case 'and': {
-        if (userPermissions === false) return false;
-        const dataPermissions = getData();
-
-        return Machine.reduceCollection<any>(
-          userPermissions,
-          dataPermissions,
-        );
-      }
-      case 'or': {
-        return Machine.reduceCollection<any>(userPermissions, getData());
-      }
-      default:
-        return userPermissions;
-    }
+    return Machine.reduceCollection<any>(
+      strategy,
+      userPermissions,
+      dataPermissions,
+    );
   };
 
   #extractDataPermissions = <
@@ -224,11 +207,9 @@ class Machine<
       const { allow, disallow } = _permissions;
 
       if (allow) {
-        const allowEntries = Object.entries(allow);
+        const allowEntries: [string, string[]][] = Object.entries(allow);
 
         allowEntries.forEach(([dataKey, userIds]) => {
-          if (!Array.isArray(userIds) || userIds.length === 0) return;
-
           userIds.forEach(userId => {
             if (!out[userId]) {
               out[userId] = {};
@@ -252,10 +233,11 @@ class Machine<
       }
 
       if (disallow) {
-        const disallowEntries = Object.entries(disallow);
+        const disallowEntries: [string, string[]][] =
+          Object.entries(disallow);
 
         disallowEntries.forEach(([dataKey, userIds]) => {
-          if (!Array.isArray(userIds) || userIds.length === 0) return;
+          if (userIds.length === 0) return;
 
           userIds.forEach(userId => {
             if (!out[userId]) {
@@ -285,21 +267,32 @@ class Machine<
     return out;
   };
 
-  static reduceCollection: ReduceCollectedReturns_F = (...collecteds) => {
-    let out: any = [];
+  static reduceCollection: ReduceCollectedReturns_F = (
+    strategy,
+    ...collecteds
+  ) => {
+    if (!strategy || strategy === 'bypass') return collecteds[0];
+
+    const isOr = strategy === 'or';
+    let out: any;
 
     for (const result of collecteds) {
-      if (result === true) return true;
-      if (out === false) {
-        out = result;
+      if (Array.isArray(out)) {
+        if (Array.isArray(result)) {
+          if (isOr) out = [...new Set([...out, ...result])];
+          else {
+            out = out.filter(value => result.includes(value));
+          }
+        }
+        if (!isOr && result === false) return false;
         continue;
       }
 
-      if (Array.isArray(result)) {
-        if (Array.isArray(out)) out = [...new Set([...out, ...result])];
-        else out = result;
-      }
+      if (result === isOr) return isOr;
+
+      out = result;
     }
+
     return out;
   };
 }

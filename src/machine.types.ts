@@ -4,12 +4,14 @@ import type {
   CheckReturnType,
   Config,
   ExtraPermissionsKey,
-  UserFrom,
+  Strategy,
+  UserArg,
 } from './types';
 
 export type CollectedReturns<Keys extends string> = boolean | Keys[];
 
 export type ReduceCollectedReturns_F = <Keys extends string>(
+  strategy: Strategy,
   ...collecteds: CollectedReturns<Keys>[]
 ) => CollectedReturns<Keys>;
 
@@ -54,7 +56,7 @@ export type ResPerm2<
 export type HasUserPermissions_F<
   Co extends Config,
   Res extends Co['ressources'] = Co['ressources'],
-  User extends UserFrom<Co> & Co['user'] = UserFrom<Co> & Co['user'],
+  User extends UserArg<Co> = UserArg<Co>,
 > = <
   Re extends Extract<keyof Res, string>,
   A extends types.ReduceArray<Res[Re]['actions']>,
@@ -70,7 +72,7 @@ export type HasUserPermissions_F<
 export type HasDataPermissions_F<
   Co extends Config,
   Res extends Co['ressources'] = Co['ressources'],
-  User extends UserFrom<Co> & Co['user'] = UserFrom<Co> & Co['user'],
+  User extends UserArg<Co> = UserArg<Co>,
 > = <
   Re extends Extract<keyof Res, string>,
   A extends types.ReduceArray<Res[Re]['actions']>,
@@ -85,7 +87,7 @@ export type HasDataPermissions_F<
 export type HasPermissions_F<
   Co extends Config,
   Res extends Co['ressources'] = Co['ressources'],
-  User extends UserFrom<Co> & Co['user'] = UserFrom<Co> & Co['user'],
+  User extends UserArg<Co> = UserArg<Co>,
 > = <
   Re extends Extract<keyof Res, string>,
   A extends types.ReduceArray<Res[Re]['actions']>,

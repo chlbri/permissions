@@ -71,6 +71,22 @@ export type ExtractRessourceKey<S extends string> =
     ? P
     : never;
 
+export type UserArg<Co extends Config> = UserFrom<Co> &
+  types.DeepPartial<Co['user']>;
+
+export type CheckFn<Co extends Config, K3 extends types.TrueObject> =
+  | types.Fn<
+      [
+        {
+          owner: UserArg<Co>;
+          performer: types.NOmit<UserArg<Co>, 'roles'>;
+          data?: K3;
+        },
+      ],
+      CheckReturnType<K3>
+    >
+  | CheckReturnType<K3>;
+
 export type Implementation<
   C extends Config,
   Res extends Ressources = C['ressources'],
@@ -80,18 +96,7 @@ export type Implementation<
     keyof Res
     ? types.DeepPartial<Res[K2]['dataType']> extends infer K3 extends
         types.TrueObject
-      ?
-          | types.Fn<
-              [
-                {
-                  owner: UserFrom<C> & C['user'];
-                  performer: types.NOmit<UserFrom<C> & C['user'], 'roles'>;
-                  data?: K3;
-                },
-              ],
-              CheckReturnType<K3>
-            >
-          | CheckReturnType<K3>
+      ? CheckFn<C, K3>
       : never
     : never;
 };
