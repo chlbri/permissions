@@ -6,7 +6,9 @@ import tsconfig from './tsconfig.json';
 export default defineConfig({
   plugins: [
     aliasTs(tsconfig as any),
-    exclude({ ignoreCoverageFiles: ['**/index.ts', '**/types.ts'] }),
+    exclude({
+      ignoreCoverageFiles: ['**/index.ts', '**/types.ts', '**/*.types.ts'],
+    }),
   ],
   test: {
     bail: 10,

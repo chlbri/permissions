@@ -1,43 +1,102 @@
 import { KeysMatching } from '@bemedev/decompose';
+import type { types } from '@bemedev/types';
+import type { DELIMITER, STRATEGIES } from './constants';
 
-export type DeepPartial<T extends object> = {
-  [K in keyof T]?: T[K] extends object ? DeepPartial<T[K]> : T[K];
-};
+export type Strategy = (typeof STRATEGIES)[number];
 
-export type PermissionsType<T = any> = {
-  action: string;
+export type Ressource<T = any> = {
+  actions: string[];
   dataType: T;
+  __strategy?: Strategy;
 };
 
-export type PermissionsTypes = Record<string, PermissionsType>;
+export type Ressources = Record<string, Ressource>;
 
-export type Roles = string;
+export type Priority = number;
 
-export type User<R extends Roles = Roles> = { __id: string; roles: R[] };
+export type Roles = Record<string, Priority>;
 
-export type PermissionCheck<
-  U extends User,
-  P extends PermissionsTypes,
-  K extends keyof P,
-  PD extends P[K]['dataType'] = P[K]['dataType'],
+export type User<R extends types.Keys = never> = {
+  __id: string;
+  roles: R[];
+};
+
+export type CheckReturnType<
+  PD extends types.TrueObject = types.TrueObject,
   Keys = KeysMatching<PD>[],
-> =
-  | boolean
-  | Keys
+> = boolean | Keys;
+
+export type PermissionCheck<U extends User, PD extends types.TrueObject> =
+  | CheckReturnType<PD>
   | ((args: {
       performer: U;
-      data: P[K]['dataType'];
+      data?: types.DeepPartial<PD>;
       owner: U;
-    }) => boolean | Keys);
+    }) => CheckReturnType<PD>);
 
-export type RolesWithPermissions<
-  R extends Roles,
-  U extends User<R>,
-  P extends PermissionsTypes,
+export type ExtraPermissionsKey<R extends string = string> =
+  | `user:${string}`
+  | `role:${R}`;
+
+export type Config = {
+  ressources: Ressources;
+  roles: Roles;
+  user: object;
+};
+
+export type UserFrom<C extends Config> = User<keyof C['roles']>;
+
+export type RolesFrom<C extends Config> = Record<keyof C, number>;
+
+export type ActionsFrom<C extends Config> = types.ReduceArray<
+  types.ValuesOf<types.ValuesOf<C>>
+>;
+
+export type Delimiter = typeof DELIMITER;
+
+export type ImplKeys<C extends Config> = {
+  [Key1 in keyof C['roles'] & string]: {
+    [Key2 in keyof C['ressources'] & string]: types.ReduceArray<
+      C['ressources'][Key2]['actions']
+    > extends infer Key3 extends string
+      ? `${Key1}${Delimiter}${Key2}${Delimiter}${Key3}`
+      : never;
+  }[keyof C['ressources'] & string];
+}[keyof C['roles'] & string];
+
+export type StringL = `${string}${string}`;
+
+export type ExtractRessourceKey<S extends string> =
+  S extends `${StringL}${Delimiter}${infer P}${Delimiter}${StringL}`
+    ? P
+    : never;
+
+export type UserArg<Co extends Config> = UserFrom<Co> &
+  types.DeepPartial<Co['user']>;
+
+export type CheckFn<Co extends Config, K3 extends types.TrueObject> =
+  | types.Fn<
+      [
+        {
+          owner: UserArg<Co>;
+          performer: types.NOmit<UserArg<Co>, 'roles'>;
+          data?: K3;
+        },
+      ],
+      CheckReturnType<K3>
+    >
+  | CheckReturnType<K3>;
+
+export type Implementation<
+  C extends Config,
+  Res extends Ressources = C['ressources'],
+  Keys extends string = ImplKeys<C>,
 > = {
-  [role in R]: Partial<{
-    [key in keyof P]: Partial<{
-      [action in P[key]['action']]: PermissionCheck<U, P, key>;
-    }>;
-  }>;
+  [Key in Keys]?: ExtractRessourceKey<Key> extends infer K2 extends
+    keyof Res
+    ? types.DeepPartial<Res[K2]['dataType']> extends infer K3 extends
+        types.TrueObject
+      ? CheckFn<C, K3>
+      : never
+    : never;
 };
