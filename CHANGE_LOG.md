@@ -9,6 +9,19 @@
 </summary>
 
 - ✨ Permissions machine with ABAC (Attribute-Based Access Control) system
+- 🔧 Upgrade deps
+- 🔍 Coverage tests **_100%_**
+
+</details>
+
+<br/>
+
+<details>
+<summary>
+<h3> Version [0.1.0] --> 2025/08/01 14:30 </h3>
+</summary>
+
+- ✨ Permissions machine with ABAC (Attribute-Based Access Control) system
 - 🔧 Support for strategies: bypass, and, or
 - 📝 Complete TypeScript types for type safety
 - 🎯 `createMachine` factory to create permission instances
