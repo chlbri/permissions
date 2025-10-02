@@ -1,5 +1,13 @@
+import type {
+  DeepPartial,
+  Fn,
+  Keys,
+  NOmit,
+  ReduceArray,
+  TrueObject,
+  ValuesOf,
+} from '@bemedev/core/lib/globals/types';
 import { KeysMatching } from '@bemedev/decompose';
-import type { types } from '@bemedev/types';
 import type { DELIMITER, STRATEGIES } from './constants';
 
 export type Strategy = (typeof STRATEGIES)[number];
@@ -16,21 +24,21 @@ export type Priority = number;
 
 export type Roles = Record<string, Priority>;
 
-export type User<R extends types.Keys = never> = {
+export type User<R extends Keys = never> = {
   __id: string;
   roles: R[];
 };
 
 export type CheckReturnType<
-  PD extends types.TrueObject = types.TrueObject,
+  PD extends TrueObject = TrueObject,
   Keys = KeysMatching<PD>[],
 > = boolean | Keys;
 
-export type PermissionCheck<U extends User, PD extends types.TrueObject> =
+export type PermissionCheck<U extends User, PD extends TrueObject> =
   | CheckReturnType<PD>
   | ((args: {
       performer: U;
-      data?: types.DeepPartial<PD>;
+      data?: DeepPartial<PD>;
       owner: U;
     }) => CheckReturnType<PD>);
 
@@ -48,15 +56,15 @@ export type UserFrom<C extends Config> = User<keyof C['roles']>;
 
 export type RolesFrom<C extends Config> = Record<keyof C, number>;
 
-export type ActionsFrom<C extends Config> = types.ReduceArray<
-  types.ValuesOf<types.ValuesOf<C>>
+export type ActionsFrom<C extends Config> = ReduceArray<
+  ValuesOf<ValuesOf<C>>
 >;
 
 export type Delimiter = typeof DELIMITER;
 
 export type ImplKeys<C extends Config> = {
   [Key1 in keyof C['roles'] & string]: {
-    [Key2 in keyof C['ressources'] & string]: types.ReduceArray<
+    [Key2 in keyof C['ressources'] & string]: ReduceArray<
       C['ressources'][Key2]['actions']
     > extends infer Key3 extends string
       ? `${Key1}${Delimiter}${Key2}${Delimiter}${Key3}`
@@ -72,14 +80,14 @@ export type ExtractRessourceKey<S extends string> =
     : never;
 
 export type UserArg<Co extends Config> = UserFrom<Co> &
-  types.DeepPartial<Co['user']>;
+  DeepPartial<Co['user']>;
 
-export type CheckFn<Co extends Config, K3 extends types.TrueObject> =
-  | types.Fn<
+export type CheckFn<Co extends Config, K3 extends TrueObject> =
+  | Fn<
       [
         {
           owner: UserArg<Co>;
-          performer: types.NOmit<UserArg<Co>, 'roles'>;
+          performer: NOmit<UserArg<Co>, 'roles'>;
           data?: K3;
         },
       ],
@@ -94,8 +102,7 @@ export type Implementation<
 > = {
   [Key in Keys]?: ExtractRessourceKey<Key> extends infer K2 extends
     keyof Res
-    ? types.DeepPartial<Res[K2]['dataType']> extends infer K3 extends
-        types.TrueObject
+    ? DeepPartial<Res[K2]['dataType']> extends infer K3 extends TrueObject
       ? CheckFn<C, K3>
       : never
     : never;

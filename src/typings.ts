@@ -1,13 +1,14 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
-import { typings as _typings, transform } from '@bemedev/types';
-import type {
-  MapS,
-  ObjectS,
-  PartialCustom,
-  TransformO,
-} from '@bemedev/types/lib/transform/types.types';
+import {
+  type MapS,
+  type ObjectS,
+  type PartialCustom,
+  type TransformO,
+  transform,
+} from '@bemedev/core/lib/features/transform';
 import type { Config, Roles, Strategy } from './types';
+import { common } from '@bemedev/core';
 
 type RessourcesS = Record<
   string,
@@ -44,7 +45,7 @@ const user = <
   __?: Rest,
 ) => {
   const rest = transform(__);
-  return _typings.commons.unknown<
+  return common.typings.dynamic<
     Readonly<Omit<typeof rest, '__id' | 'roles'>>
   >();
 };

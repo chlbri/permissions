@@ -2,7 +2,7 @@ import { createTests } from '@bemedev/vitest-extended';
 import { createMachine } from './machine';
 import { typings } from './typings';
 
-describe('Machine Tests', () => {
+describe.concurrent('Machine Tests', () => {
   describe('#01 => Basic Machine Creation', () => {
     const machine = createMachine(
       typings({
@@ -31,7 +31,9 @@ describe('Machine Tests', () => {
       },
     );
 
-    const { acceptation, success } = createTests(machine.hasPermisions);
+    const { acceptation, success } = createTests(
+      machine.hasPermisions as any,
+    );
 
     describe('#00 => Acceptation', acceptation);
 
@@ -320,7 +322,7 @@ describe('Machine Tests', () => {
       },
     );
 
-    const { success } = createTests(machine.hasPermisions);
+    const { success } = createTests(machine.hasPermisions as any);
 
     describe(
       'OR Strategy Tests',
@@ -400,7 +402,7 @@ describe('Machine Tests', () => {
       },
     );
 
-    const { success } = createTests(machine.hasPermisions);
+    const { success } = createTests(machine.hasPermisions as any);
 
     describe(
       'AND Strategy Tests',
@@ -591,7 +593,7 @@ describe('Machine Tests', () => {
       },
     );
 
-    const { success } = createTests(machine.hasPermisions);
+    const { success } = createTests(machine.hasPermisions as any);
 
     describe(
       'Complex Data Permissions',
@@ -716,7 +718,7 @@ describe('Machine Tests', () => {
       },
     );
 
-    const { success } = createTests(machine.hasPermisions);
+    const { success } = createTests(machine.hasPermisions as any);
 
     describe(
       'Multi-Role Priority Tests',
@@ -924,7 +926,7 @@ describe('Machine Tests', () => {
       },
     );
 
-    const { success } = createTests(machine.hasPermisions);
+    const { success } = createTests(machine.hasPermisions as any);
 
     describe(
       'Edge Cases',

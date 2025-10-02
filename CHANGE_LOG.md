@@ -5,7 +5,36 @@
 
 <details>
 <summary>
-<h3> Version [0.1.0] --> 2025/08/01 14:30 </h3>
+<h3>
+
+**Version [0.1.2]** --> _2025/10/02 12:30_
+
+</h3>
+</summary>
+
+- 🔧 Update development dependencies
+- 📦 Upgrade `@bemedev/vitest-alias` v0.0.3
+- 📦 Upgrade `@bemedev/vitest-exclude` v0.1.1
+- 📦 Upgrade `@bemedev/vitest-extended` v1.5.3
+- 📝 Improve documentation with CONTRIBUTING.md
+- 🛠️ Configure Copilot instructions for better commits
+- 🔍 Improve ESLint configuration
+- 📊 Optimize Rollup configuration
+- 🧪 Improve test configuration with Vitest
+- 🔒 Add peerDependencies: `@bemedev/core`
+- 🗑️ Remove dependencies: `@bemdev/types`
+
+</details>
+
+<br/>
+
+<details>
+<summary>
+<h3>
+
+**Version [0.1.0]** --> _2025/08/01 14:30_
+
+</h3>
 </summary>
 
 - ✨ Permissions machine with ABAC (Attribute-Based Access Control) system
@@ -18,7 +47,11 @@
 
 <details>
 <summary>
-<h3> Version [0.1.0] --> 2025/08/01 14:30 </h3>
+<h3>
+
+**Version [0.1.0]** --> _2025/08/01 14:30_
+
+</h3>
 </summary>
 
 - ✨ Permissions machine with ABAC (Attribute-Based Access Control) system
