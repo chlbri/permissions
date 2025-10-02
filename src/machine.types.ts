@@ -1,5 +1,9 @@
+import type {
+  DeepPartial,
+  ReduceArray,
+  TrueObject,
+} from '@bemedev/core/lib/globals/types';
 import type { KeysMatching } from '@bemedev/decompose';
-import type { types } from '@bemedev/types';
 import type {
   CheckReturnType,
   Config,
@@ -21,7 +25,7 @@ export type ResPerm<
   Keys extends string,
 > = Partial<
   Record<
-    types.ReduceArray<Co['ressources'][Re]['actions']>,
+    ReduceArray<Co['ressources'][Re]['actions']>,
     Partial<
       Record<
         'allow' | 'disallow',
@@ -47,7 +51,7 @@ export type ResPerm2<
       Record<
         ExtraPermissionsKey<Extract<keyof Co, string>>,
         Record<
-          types.ReduceArray<Co['ressources'][Re]['actions']>,
+          ReduceArray<Co['ressources'][Re]['actions']>,
           boolean | Keys
         >
       >
@@ -59,8 +63,8 @@ export type HasUserPermissions_F<
   User extends UserArg<Co> = UserArg<Co>,
 > = <
   Re extends Extract<keyof Res, string>,
-  A extends types.ReduceArray<Res[Re]['actions']>,
-  PD extends types.DeepPartial<Res[Re]['dataType']>,
+  A extends ReduceArray<Res[Re]['actions']>,
+  PD extends DeepPartial<Res[Re]['dataType']>,
 >(args: {
   performer: User;
   owner: User;
@@ -75,8 +79,8 @@ export type HasDataPermissions_F<
   User extends UserArg<Co> = UserArg<Co>,
 > = <
   Re extends Extract<keyof Res, string>,
-  A extends types.ReduceArray<Res[Re]['actions']>,
-  PD extends types.TrueObject = types.DeepPartial<Res[Re]['dataType']>,
+  A extends ReduceArray<Res[Re]['actions']>,
+  PD extends TrueObject = DeepPartial<Res[Re]['dataType']>,
   Keys extends string = KeysMatching<PD>,
 >(
   performer: User,
@@ -90,8 +94,8 @@ export type HasPermissions_F<
   User extends UserArg<Co> = UserArg<Co>,
 > = <
   Re extends Extract<keyof Res, string>,
-  A extends types.ReduceArray<Res[Re]['actions']>,
-  PD extends types.DeepPartial<Res[Re]['dataType']>,
+  A extends ReduceArray<Res[Re]['actions']>,
+  PD extends DeepPartial<Res[Re]['dataType']>,
   Keys extends string = KeysMatching<PD>,
 >(args: {
   performer: User;

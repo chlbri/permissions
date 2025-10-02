@@ -1,5 +1,10 @@
+import { common } from '@bemedev/core';
+import type {
+  DeepPartial,
+  TrueObject,
+  ValuesOf,
+} from '@bemedev/core/lib/globals/types';
 import type { KeysMatching } from '@bemedev/decompose';
-import { castings, typings, type types } from '@bemedev/types';
 import { DELIMITER } from './constants';
 import type {
   CollectedReturns,
@@ -40,7 +45,7 @@ class Machine<
   }
 
   get __user() {
-    return typings.commons.unknown<UserFrom<Co> & Co['user']>();
+    return common.typings.dynamic<UserFrom<Co> & Co['user']>();
   }
 
   get ressources() {
@@ -106,7 +111,7 @@ class Machine<
 
       const permission = this.#implementation[key];
 
-      if (castings.commons.isUndefined(permission)) return;
+      if (common.castings.is.undefined(permission)) return;
 
       if (typeof permission === 'function') {
         const result = permission({
@@ -144,7 +149,7 @@ class Machine<
 
     const collecteds: CollectedReturns<any>[] = [];
 
-    if (castings.commons.isDefined(result1)) collecteds.push(result1);
+    if (common.castings.is.defined(result1)) collecteds.push(result1);
 
     sortedRoles.forEach(role => {
       const _role = String(role) as keyof Co & string;
@@ -177,9 +182,7 @@ class Machine<
 
   #extractDataPermissions = <
     Re extends Extract<keyof Co['ressources'], string>,
-    PD extends types.TrueObject = types.DeepPartial<
-      Co['ressources'][Re]['dataType']
-    >,
+    PD extends TrueObject = DeepPartial<Co['ressources'][Re]['dataType']>,
     Keys extends string = KeysMatching<PD>,
   >(
     permissions?: ResPerm<Co, Re, Keys>,
@@ -188,21 +191,21 @@ class Machine<
 
     type Pe = ResPerm<Co, Re, Keys>;
 
-    type Entries = [keyof Pe, types.ValuesOf<Pe>][];
+    type Entries = [keyof Pe, ValuesOf<Pe>][];
 
-    const entries = castings.commons.unknown<Entries>(
+    const entries = common.castings.unknown<Entries>(
       Object.entries(permissions),
     );
 
     const allValuesAreNotDefineds = entries.every(([, value]) =>
-      castings.commons.isUndefined(value),
+      common.castings.is.undefined(value),
     );
     if (allValuesAreNotDefineds) return true;
 
     const out: any = {};
 
     entries.forEach(([action, _permissions]) => {
-      if (castings.commons.isUndefined(_permissions)) return;
+      if (common.castings.is.undefined(_permissions)) return;
 
       const { allow, disallow } = _permissions;
 
