@@ -29,7 +29,7 @@ jobs:
         uses: 'chlbri/pnpmi-action@main'
 
       - name: Upgrade
-        run: pnpm run upgrade
+        run: pnpm dlx @bemedev/upgrade-npm-package -v
 
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v7
